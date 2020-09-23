@@ -28,12 +28,12 @@ internal protocol SideMenuPresentationControllerDelegate: class {
 internal final class SideMenuPresentationController {
 
     private let config: PresentationModel
-    private unowned var containerView: UIView
+    private weak var containerView: UIView?
     private var interactivePopGestureRecognizerEnabled: Bool?
     private var clipsToBounds: Bool?
     private let leftSide: Bool
-    private var presentedViewController: UIViewController?
-    private var presentingViewController: UIViewController?
+    private weak var presentedViewController: UIViewController?
+    private weak var presentingViewController: UIViewController?
 
     private lazy var snapshotView: UIView? = {
         guard
@@ -47,7 +47,7 @@ internal final class SideMenuPresentationController {
     }()
 
     private lazy var statusBarView: UIView? = {
-        guard config.statusBarEndAlpha != 0 else { return nil }
+        guard config.statusBarEndAlpha > .leastNonzeroMagnitude else { return nil }
 
         return UIView {
             $0.backgroundColor = config.presentationStyle.backgroundColor
@@ -77,11 +77,14 @@ internal final class SideMenuPresentationController {
     }
     
     func containerViewWillLayoutSubviews() {
+        guard let containerView = containerView else { return }
+
         if let presentedVC = self.presentedViewController {
             presentedVC.view.untransform {
                 presentedVC.view.frame = frameOfPresentedViewInContainerView
             }
         }
+
         if let presentingVC = self.presentingViewController {
             presentingVC.view.untransform {
                 presentingVC.view.frame = frameOfPresentingViewInContainerView
@@ -97,6 +100,8 @@ internal final class SideMenuPresentationController {
     }
     
     func presentationTransitionWillBegin() {
+    	guard let containerView = containerView else { return }
+
         if  let snapshotView = snapshotView,
             let presentingVC = self.presentingViewController
         {
@@ -126,7 +131,7 @@ internal final class SideMenuPresentationController {
             let presentedVC = self.presentedViewController,
             let presentingVC = self.presentingViewController
         else { return }
-        
+
         transition(
             to: presentedVC,
             from: presentingVC,
@@ -169,6 +174,7 @@ internal final class SideMenuPresentationController {
     func dismissalTransitionWillBegin() {
         snapshotView?.removeFromSuperview()
         presentationTransition()
+
         if  let presentedVC = self.presentedViewController,
             let presentingVC = self.presentingViewController
         {
@@ -208,8 +214,11 @@ internal final class SideMenuPresentationController {
             return
         }
 
-        statusBarView?.removeFromSuperview()
+        guard let presentedViewController = presentedViewController,
+            let presentingViewController = presentingViewController
+            else { return }
 
+        statusBarView?.removeFromSuperview()
         removeStyles(from: presentingVC.containerViewController.view)
         
         if let interactivePopGestureRecognizerEnabled = interactivePopGestureRecognizerEnabled,
@@ -226,13 +235,14 @@ private extension SideMenuPresentationController {
 
     var statusBarFrame: CGRect {
         if #available(iOS 13.0, *) {
-            return containerView.window?.windowScene?.statusBarManager?.statusBarFrame ?? .zero
+            return containerView?.window?.windowScene?.statusBarManager?.statusBarFrame ?? .zero
         } else {
             return UIApplication.shared.statusBarFrame
         }
     }
 
     var frameOfPresentedViewInContainerView: CGRect {
+        guard let containerView = containerView else { return .zero }
         var rect = containerView.bounds
         rect.origin.x = leftSide ? 0 : rect.width - config.menuWidth
         rect.size.width = config.menuWidth
@@ -240,6 +250,7 @@ private extension SideMenuPresentationController {
     }
 
     var frameOfPresentingViewInContainerView: CGRect {
+        guard let containerView = containerView else { return .zero }
         var rect = containerView.frame
         if containerView.superview != nil, containerView.frame.minY > .ulpOfOne {
             let statusBarOffset = statusBarFrame.height - rect.minY
@@ -266,18 +277,20 @@ private extension SideMenuPresentationController {
     }
 
     func layerViews() {
+        guard let presentedVC = presentedViewController else { return }
+
         statusBarView?.layer.zPosition = 2
 
         if  config.presentationStyle.menuOnTop,
             let presentedVC = self.presentedViewController
         {
             addShadow(to: presentedVC.view)
-            presentedViewController?.view.layer.zPosition = 1
+            presentedVC.view.layer.zPosition = 1
         }
         else if let presentingVC = self.presentingViewController
         {
             addShadow(to: presentingVC.view)
-            presentedViewController?.view.layer.zPosition = -1
+            presentedVC.view.layer.zPosition = -1
         }
     }
 
