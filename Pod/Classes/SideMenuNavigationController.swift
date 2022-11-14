@@ -105,6 +105,7 @@ public struct SideMenuSettings: SideMenuNavigationControllerModel, Initializable
 }
 
 internal typealias Menu = SideMenuNavigationController
+
 typealias SideMenuNavigationControllerModel = MenuModel & PresentationModel & AnimationModel
 
 @objcMembers
