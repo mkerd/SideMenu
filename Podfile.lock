@@ -1,5 +1,5 @@
 PODS:
-  - SideMenu (6.4.9)
+  - SideMenu (6.5.0)
 
 DEPENDENCIES:
   - SideMenu (from `.`)
@@ -9,7 +9,7 @@ EXTERNAL SOURCES:
     :path: "."
 
 SPEC CHECKSUMS:
-  SideMenu: 43910eb6dc994dd59771f8e82573d04a9e776361
+  SideMenu: f583187d21c5b1dd04c72002be544b555a2627a2
 
 PODFILE CHECKSUM: 863f183ea1ab6f64dc8553590349c586faf8e4a1
 

@@ -113,6 +113,7 @@ install_dsym() {
       rsync --delete -av "${RSYNC_PROTECT_TMP_FILES[@]}" --links --filter "- CVS/" --filter "- .svn/" --filter "- .git/" --filter "- .hg/" --filter "- Headers" --filter "- PrivateHeaders" --filter "- Modules" "${DERIVED_FILES_DIR}/${basename}.dSYM" "${DWARF_DSYM_FOLDER_PATH}"
     else
       # The dSYM was not stripped at all, in this case touch a fake folder so the input/output paths from Xcode do not reexecute this script because the file is missing.
+      mkdir -p "${DWARF_DSYM_FOLDER_PATH}"
       touch "${DWARF_DSYM_FOLDER_PATH}/${basename}.dSYM"
     fi
   fi
@@ -173,68 +174,6 @@ code_sign_if_enabled() {
     eval "$code_sign_cmd"
   fi
 }
-
-# Strip invalid architectures
-strip_invalid_archs() {
-  binary="$1"
-  warn_missing_arch=${2:-true}
-  # Get architectures for current target binary
-  binary_archs="$(lipo -info "$binary" | rev | cut -d ':' -f1 | awk '{$1=$1;print}' | rev)"
-  # Intersect them with the architectures we are building for
-  intersected_archs="$(echo ${ARCHS[@]} ${binary_archs[@]} | tr ' ' '\n' | sort | uniq -d)"
-  # If there are no archs supported by this binary then warn the user
-  if [[ -z "$intersected_archs" ]]; then
-    if [[ "$warn_missing_arch" == "true" ]]; then
-      echo "warning: [CP] Vendored binary '$binary' contains architectures ($binary_archs) none of which match the current build architectures ($ARCHS)."
-    fi
-    STRIP_BINARY_RETVAL=0
-    return
-  fi
-  stripped=""
-  for arch in $binary_archs; do
-    if ! [[ "${ARCHS}" == *"$arch"* ]]; then
-      # Strip non-valid architectures in-place
-      lipo -remove "$arch" -output "$binary" "$binary"
-      stripped="$stripped $arch"
-    fi
-  done
-  if [[ "$stripped" ]]; then
-    echo "Stripped $binary of architectures:$stripped"
-  fi
-  STRIP_BINARY_RETVAL=1
-}
-
-install_artifact() {
-  artifact="$1"
-  base="$(basename "$artifact")"
-  case $base in
-  *.framework)
-    install_framework "$artifact"
-    ;;
-  *.dSYM)
-    # Suppress arch warnings since XCFrameworks will include many dSYM files
-    install_dsym "$artifact" "false"
-    ;;
-  *.bcsymbolmap)
-    install_bcsymbolmap "$artifact"
-    ;;
-  *)
-    echo "error: Unrecognized artifact "$artifact""
-    ;;
-  esac
-}
-
-copy_artifacts() {
-  file_list="$1"
-  while read artifact; do
-    install_artifact "$artifact"
-  done <$file_list
-}
-
-ARTIFACT_LIST_FILE="${BUILT_PRODUCTS_DIR}/cocoapods-artifacts-${CONFIGURATION}.txt"
-if [ -r "${ARTIFACT_LIST_FILE}" ]; then
-  copy_artifacts "${ARTIFACT_LIST_FILE}"
-fi
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/SideMenu/SideMenu.framework"
