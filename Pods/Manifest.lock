@@ -1,5 +1,5 @@
 PODS:
-  - SideMenu (6.4.6)
+  - SideMenu (6.4.9)
 
 DEPENDENCIES:
   - SideMenu (from `.`)

@@ -98,7 +98,7 @@ public struct SideMenuSettings: SideMenuNavigationControllerModel, Initializable
     public var presentDuration: Double = 0.35
     public var presentationStyle: SideMenuPresentationStyle = .viewSlideOut
     public var pushStyle: SideMenuPushStyle = .default
-    public var statusBarEndAlpha: CGFloat = 1
+    public var statusBarEndAlpha: CGFloat = 0
     public var usingSpringWithDamping: CGFloat = 1
 
     public init() {}
@@ -200,7 +200,6 @@ open class SideMenuNavigationController: UINavigationController {
 
         // We had presented a view before, so lets dismiss ourselves as already acted upon
         if view.isHidden {
-            transitionController?.transition(presenting: false, animated: false)
             dismiss(animated: false, completion: { [weak self] in
                 self?.view.isHidden = false
             })
@@ -246,7 +245,7 @@ open class SideMenuNavigationController: UINavigationController {
             transitionController?.transition(presenting: false, animated: false)
         }
 
-        // Clear selecton on UITableViewControllers when reappearing using custom transitions
+        // Clear selection on UITableViewControllers when reappearing using custom transitions
         if let tableViewController = topViewController as? UITableViewController,
             let tableView = tableViewController.tableView,
             let indexPaths = tableView.indexPathsForSelectedRows,
