@@ -69,11 +69,11 @@ internal protocol MenuModel {
     @objc optional func sideMenuDidDisappear(menu: SideMenuNavigationController, animated: Bool)
 }
 
-internal protocol SideMenuNavigationControllerTransitionDelegate: class {
+internal protocol SideMenuNavigationControllerTransitionDelegate: AnyObject {
     func sideMenuTransitionDidDismiss(menu: Menu)
 }
 
-public struct SideMenuSettings: SideMenuNavigationController.Model, InitializableStruct {
+public struct SideMenuSettings: SideMenuNavigationControllerModel, InitializableStruct {
     public var allowPushOfSameClassTwice: Bool = true
     public var alwaysAnimate: Bool = true
     public var animationOptions: UIView.AnimationOptions = .curveEaseInOut
@@ -105,11 +105,11 @@ public struct SideMenuSettings: SideMenuNavigationController.Model, Initializabl
 }
 
 internal typealias Menu = SideMenuNavigationController
+typealias SideMenuNavigationControllerModel = MenuModel & PresentationModel & AnimationModel
 
 @objcMembers
 open class SideMenuNavigationController: UINavigationController {
 
-    internal typealias Model = MenuModel & PresentationModel & AnimationModel
 
     private lazy var _leftSide = Protected(false) { [weak self] oldValue, newValue in
         guard self?.isHidden != false else {
@@ -337,7 +337,7 @@ open class SideMenuNavigationController: UINavigationController {
 }
 
 // Interface
-extension SideMenuNavigationController: SideMenuNavigationController.Model {
+extension SideMenuNavigationController: SideMenuNavigationControllerModel {
 
     @IBInspectable open var allowPushOfSameClassTwice: Bool {
         get { return settings.allowPushOfSameClassTwice }

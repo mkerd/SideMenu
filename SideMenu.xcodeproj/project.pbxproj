@@ -251,8 +251,8 @@
 			buildConfigurationList = 7B48A0F11DCB2487002990A1 /* Build configuration list for PBXNativeTarget "Example" */;
 			buildPhases = (
 				B96CD08B77E6CAC7B3180AE2 /* [CP] Check Pods Manifest.lock */,
-				7B48A0CF1DCB2487002990A1 /* Sources */,
 				7B48A0D01DCB2487002990A1 /* Frameworks */,
+				7B48A0CF1DCB2487002990A1 /* Sources */,
 				7B48A0D11DCB2487002990A1 /* Resources */,
 				558DEC0A930F44C17D50F99B /* [CP] Embed Pods Frameworks */,
 			);
